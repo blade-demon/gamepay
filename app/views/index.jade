@@ -1,5 +1,61 @@
 extends layout
-
+block js
+  script(src="https://code.jquery.com/jquery-3.2.1.slim.min.js")
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js")
+  script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js")
+  script(src="https://cdn.bootcss.com/socket.io/2.0.4/socket.io.js")
+  script(src="https://cdn.bootcss.com/axios/0.17.1/axios.min.js")
+  script(src="js/index.js")
 block content
-  h1= title
-  p Welcome to #{title}
+  .container
+    .row
+      .col-md-4
+        .card.text-white.bg-dark.mb-3(style='max-width: 20rem;')
+          .card-header 游戏ID:
+            span.gameId 1
+          .card-body
+            h4.card-title 斯皮兰卡
+            a.btn.btn-danger.failed-btn(data-toggle='modal', data-target='#unlockGameModal', data-gameId='1') 游戏失败
+            a.btn.btn-light.launch-btn(href="#") 启动游戏
+        .card.text-white.bg-dark.mb-3(style='max-width: 20rem;')
+          .card-header 游戏ID:
+            span.gameId 2
+          .card-body
+            h4.card-title 超级连击王
+            a.btn.btn-danger.failed-btn(data-toggle='modal', data-target='#unlockGameModal', data-gameId='2') 游戏失败
+            a.btn.btn-light.launch-btn(href="#") 启动游戏
+        .card.text-white.bg-dark.mb-3(style='max-width: 20rem;')
+          .card-header 游戏ID:
+            span.gameId 3
+          .card-body
+            h4.card-title 四元素大冒险
+            a.btn.btn-danger.failed-btn(data-toggle='modal', data-target='#unlockGameModal', data-gameId='3') 游戏失败
+            a.btn.btn-light.launch-btn(href="#") 启动游戏
+  .container
+    .jumbotron.jumbotron-fluid
+      .container
+        p 当前进行的游戏：
+          strong.text-success#current-game
+        p mac地址：
+          strong.text-success#mac-label
+        p 游戏启动时间：
+          strong.text-success#launch-time
+  // 解锁游戏modal
+  #unlockGameModal.modal.fade(tabindex='-1', role='dialog', aria-labelledby='unlockGameModalLabel', aria-hidden='true')
+    .modal-dialog(role='document')
+      .modal-content
+        .modal-header
+          h5#unlockGameModalLabel.modal-title 请在充值后，输入Code继续进行游戏
+          button.close(type='button', data-dismiss='modal', aria-label='Close')
+            span(aria-hidden='true') ×
+        .modal-body
+          form
+            .form-group
+              label.col-form-label(for='code') Code
+              input.form-control#inputCode(type='text')
+        .modal-footer
+          button.btn.btn-primary#btnConfirm(type='button') 确定
+
+
+
+

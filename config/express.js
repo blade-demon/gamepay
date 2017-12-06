@@ -36,6 +36,16 @@ module.exports = (app, config) => {
         require(service)(app);
     });
 
+    // 游戏登录测试账号
+    app.get('/', (req, res) => {
+        res.render('index', { "title": "Gamepoch" });
+    });
+
+    // 管理员界面
+    app.get('/admin', (req, res) => {
+        res.render('admin', { "title": "Gamepoch" });
+    });
+
     app.use((req, res, next) => {
         var err = new Error('Not Found');
         err.status = 404;

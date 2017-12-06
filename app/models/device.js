@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const DeviceSchema = new Schema({
     deviceId: String,
     mac: String,
-    loginRecord: String,
+    loginRecord: [Schema.ObjectId],
     createdAt: Date
 });
 
