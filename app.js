@@ -2,6 +2,8 @@ const express = require('express');
 const config = require('./config/config');
 const glob = require('glob');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const randomize = require('randomatic');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, { useMongoClient: true });
@@ -51,10 +53,12 @@ io.of('/machine').on('connection', function(machine) {
         // 修改本次游戏记录中已经失败，需要付费
         co(function*() {
             const recordFound = yield Record.findById({ _id: record._id });
+            const failedTime = new Date();
             recordFound.gameFailed = true;
             recordFound.needPay = true;
-            recordFound.failedTime.push(new Date(record.time));
-            yield recordFound.save();
+            recordFound.failedList.push({ "time": failedTime, "salt": bcrypt.genSaltSync(10), "hash": bcrypt.hashSync(String(failedTime.getTime()), recordFound.salt) });
+            const recordFoundSave = yield recordFound.save();
+            console.log('游戏失败的保存记录：', recordFoundSave);
         });
     });
 

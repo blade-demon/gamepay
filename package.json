@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.17.1",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.13.3",
     "co": "^4.6.0",
     "compression": "^1.5.2",
@@ -22,6 +23,7 @@
     "method-override": "^2.3.0",
     "mongoose": "^4.1.2",
     "morgan": "^1.6.1",
+    "randomatic": "^2.0.0",
     "serve-favicon": "^2.3.0",
     "socket.io": "^2.0.4"
   },

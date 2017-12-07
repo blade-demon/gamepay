@@ -19,15 +19,17 @@ $(function() {
         modal.find('.modal-title').text(`请在充值后，输入Code继续进行游戏${gameName}`);
     });
 
-    // 点击确定code
+    // 点击确定，向服务器发送code，验证code的有效性
     $('#btnConfirm').click(function() {
-        console.log($('#inputCode').val());
         var code = $('#inputCode').val();
+        console.log('currentGameRecord:', currentGameRecord);
         // 验证code有效性
-        axios.post('/services/check', { code: code }).then(function(response) {
+        axios.post('/services/check', { code: code, recordId: currentGameRecord._id }).then(function(response) {
             console.log('code 验证结果: ', response.data);
             if (response.data) {
                 $('#unlockGameModal').modal('hide');
+            } else {
+                $('.col-form-label').text('Code invalid!').css("color", "red");
             }
         });
     });
