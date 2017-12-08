@@ -134,11 +134,3 @@ function SocketToServer(launchData) {
         machine.emit('launch', machineId, launchData);
     });
 }
-
-/**
- * 游戏结束，断开链接
- * @param
- */
-function SocketEndServer() {
-    machine.emit('disconnected', currentGameRecord);
-}
