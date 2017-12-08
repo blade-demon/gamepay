@@ -44,6 +44,35 @@ router.post('/failed', (req, res) => {
     });
 });
 
+// 游戏失败扫描二维码付费
+// /services/pay?mac=xx:xx:xx:xx
+router.post('/pay', (req, res) => {
+    co(function*() {
+        var mac = req.params.mac;
+        var device = yield Device.find({ mac: mac });
+        if (typeof(device) === undefined) {
+            return res.status(404).send("设备不存在");
+        }
+
+        var loginRecord = device.loginRecord.slice(-1).pop();
+        if (typeof(loginRecord) === undefined) {
+            return res.status(404).send('不存在本次登录记录');
+        }
+
+        var recordFound = yield Record.findById(loginRecord._id);
+        if (typeof(recordFound) === undefined) {
+            return res.status(404).send(recordFound);
+        }
+        // 游戏失败且未付费的情况下，调用付费接口
+        if (recordFound.isFailed && !recordFound.isPaid) {
+            // TODO: 调用付费接口
+        } else {
+            return res.status(200).send('无需付费');
+        }
+
+    });
+});
+
 // 微信调取接口
 // 当用户付费成功以后，调取改接口修改某条记录的最近一条失败记录的code
 router.post('/writecode', (req, res) => {
@@ -93,6 +122,28 @@ router.post('/check', (req, res) => {
             return res.status(200).send(false);
         }
     });
+});
+
+/**
+ * 游戏付费以后生成code并写入
+ * @param  {String} recordId     - 游戏记录Id
+ * @return {Boolean} true/false  - 返回true/false
+ */
+const WriteCode = co.wrap(function*(recordId) {
+    var code = randomize('A0', 8);
+    const record = yield Record.findById(recordId);
+    const lastFailedItem = record.failedList.slice(-1).pop();
+    // 不存在游戏失败记录
+    if (typeof(lastFailedItem) === undefined) {
+        return false;
+    }
+    // code已存在也覆盖
+    record.failedList.slice(-1).pop().code = code;
+    // 设置本次已经付费
+    record.isPaid = true;
+    console.log('code 已成功生成：', record.failedList);
+    yield record.save();
+    return true;
 });
 
 
