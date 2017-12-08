@@ -19,12 +19,6 @@ const RecordSchema = new Schema({
             type: Date,
             default: Date.now()
         },
-        hash: {
-            type: String
-        },
-        salt: {
-            type: String
-        },
         code: {
             type: String
         }

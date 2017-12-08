@@ -1,6 +1,5 @@
-var machine = {};
 var currentGameRecord = {};
-
+var machine = {};
 $(function() {
     // 监听启动事件
     $(".launch-btn").click(LaunchGameHandler);
@@ -11,56 +10,61 @@ $(function() {
     $('#mac-label').text(getMacAddress());
 
     // 显示输入code界面
-    $('#unlockGameModal').on('show.bs.modal', function(event) {
-        var button = $(event.relatedTarget);
-        var gameId = button.data('gameid');
-        var gameName = button.parent().find('.card-title').text();
-        var modal = $(this);
-        modal.find('.modal-title').text(`请在充值后，输入Code继续进行游戏${gameName}`);
-    });
+    $('#unlockGameModal').on('show.bs.modal', UnlockGameModalHandler);
 
     // 点击确定，向服务器发送code，验证code的有效性
-    $('#btnConfirm').click(function() {
-        var code = $('#inputCode').val();
-        console.log('currentGameRecord:', currentGameRecord);
-        // 验证code有效性
-        axios.post('/services/check', { code: code, recordId: currentGameRecord._id }).then(function(response) {
-            console.log('code 验证结果: ', response.data);
-            if (response.data) {
-                $('#unlockGameModal').modal('hide');
-            } else {
-                $('.col-form-label').text('Code invalid!').css("color", "red");
-            }
-        });
-    });
+    $('#btnConfirm').click(CheckCodeHandler);
 });
 
-// 机器启动游戏
+// 显示code输入
+function UnlockGameModalHandler(event) {
+    var button = $(event.relatedTarget);
+    var gameId = button.data('gameid');
+    var gameName = button.parent().find('.card-title').text();
+    var modal = $(this);
+    modal.find('.modal-title').text(`请在充值后，输入Code继续进行游戏${gameName}`);
+}
+
+// 检查code合法性
+function CheckCodeHandler() {
+    var code = $('#inputCode').val();
+    console.log('currentGameRecord:', currentGameRecord);
+    // 验证code有效性
+    axios.post('/services/check', { code: code, recordId: currentGameRecord._id }).then(function(response) {
+        console.log('code 验证结果: ', response.data);
+        if (response.data) {
+            $('#unlockGameModal').modal('hide');
+        } else {
+            $('.col-form-label').text('Code invalid!').css("color", "red");
+        }
+    });
+}
+
+// 机器启动/关闭游戏
 function LaunchGameHandler(event) {
     if ($(".launch-btn").hasClass('btn-warning')) {
+        SocketEndServer();
         window.location.href = "/";
     }
-
-    machine = io('http://localhost:3000/machine');
-    machine.on('connected', function(data) {
-        console.log('Game launched successfully in machine: ', data);
-        // 向服务器发送：机器消息，游戏信息，时间戳
-        var launchData = {
-            mac: $('#mac-label').text(),
-            gameId: getGameID(event.target),
-            gameName: getGameName(event.target),
-            time: new Date().getTime()
-        };
-        console.log(launchData);
-        machine.emit('launch', machine.id, launchData);
-        $("#current-game").text(launchData.gameName);
-        $('#launch-time').text(new Date(launchData.time));
-        setGameStatus(event.target);
-    });
-
-    machine.on('registered', function(data) {
-        console.log("此次游戏启动信息已注册：", data);
-        currentGameRecord = data;
+    // 向服务器发送：机器消息，游戏信息，时间戳
+    var launchData = {
+        mac: $('#mac-label').text(),
+        gameId: getGameID(event.target),
+        gameName: getGameName(event.target),
+        time: new Date().getTime()
+    };
+    // 和服务器进行Socket连接
+    SocketToServer(launchData);
+    // console.log(launchData);
+    axios.post('/services/login', launchData).then(function(response) {
+        if (response.data) {
+            currentGameRecord = response.data;
+            $("#current-game").text(launchData.gameName);
+            $('#launch-time').text(new Date(launchData.time));
+            setGameStatus(event.target);
+        } else {
+            console.log("游戏登录失败！");
+        }
     });
 }
 
@@ -68,11 +72,16 @@ function LaunchGameHandler(event) {
 function GameFailedHandler(event) {
     var $element = $(event.target).parent().parent();
     var gameId = $element.find(".gameId").text();
-    machine.emit('game failed', {
+
+    var failedInfo = {
         gameId: gameId,
-        mac: $("#mac-label").text(),
+        mac: $('#mac-label').text(),
         time: new Date().getTime(),
         _id: currentGameRecord._id
+    };
+    console.log(failedInfo);
+    axios.post('/services/failed', failedInfo).then((response) => {
+        console.log("设置游戏失败：", response.data);
     });
 }
 
@@ -84,8 +93,6 @@ function getMacAddress() {
         '54:52:00:1e:d2:68'
     ];
     return mockMacAddress[0];
-    // return randomMac();
-
 }
 
 // 获得当前游戏的名称
@@ -114,4 +121,24 @@ function randomMac(prefix) {
         mac += Math.floor(Math.random() * 16).toString(16);
     }
     return mac;
+}
+
+/**
+ * socket 链接
+ * @param {Object} launchData - 将游戏和机器信息发送至服务器
+ */
+function SocketToServer(launchData) {
+    machine = io.connect('http://localhost:3000/machine');
+    machine.on('connected', function(machineId) {
+        console.log('当前的machineId是：', machineId);
+        machine.emit('launch', machineId, launchData);
+    });
+}
+
+/**
+ * 游戏结束，断开链接
+ * @param
+ */
+function SocketEndServer() {
+    machine.emit('disconnected', currentGameRecord);
 }

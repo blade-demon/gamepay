@@ -2,8 +2,6 @@ const express = require('express');
 const config = require('./config/config');
 const glob = require('glob');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const randomize = require('randomatic');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(config.db, { useMongoClient: true });
@@ -27,7 +25,8 @@ const Record = mongoose.model('Record');
 const Device = mongoose.model('Device');
 
 let launchedMachines = 0;
-let launchedMachinesArray = [];
+let launchMachinesList = [];
+let adminId = '';
 // 机器登录
 io.of('/machine').on('connection', function(machine) {
     console.log(`machine ${machine.id} connected.`);
@@ -37,81 +36,44 @@ io.of('/machine').on('connection', function(machine) {
     // 监听客户端的游戏启动事件
     machine.on('launch', function(from, msg) {
         launchedMachines++;
-        console.log("启动的机器个数：", launchedMachines);
+        launchMachinesList.push({ machineID: machine.id, mac: msg.mac, gameName: msg.gameName, time: new Date(msg.time) });
         console.log(`游戏 ${msg.gameName} 从机器${msg.mac} 在${new Date(msg.time)}启动成功`);
-
-        co(function*() {
-            const currentRecord = yield RecordGame(msg.mac, msg.gameId);
-            // 发送设备游戏已注册事件
-            machine.emit('registered', currentRecord);
-        });
-    });
-
-    // 监听客户端的游戏失败事件
-    machine.on('game failed', function(record) {
-        console.log('此次游戏失败的信息：', record);
-        // 修改本次游戏记录中已经失败，需要付费
-        co(function*() {
-            const recordFound = yield Record.findById({ _id: record._id });
-            const failedTime = new Date();
-            recordFound.gameFailed = true;
-            recordFound.needPay = true;
-            recordFound.failedList.push({ "time": failedTime, "salt": bcrypt.genSaltSync(10), "hash": bcrypt.hashSync(String(failedTime.getTime()), recordFound.salt) });
-            const recordFoundSave = yield recordFound.save();
-            console.log('游戏失败的保存记录：', recordFoundSave);
-        });
+        // if (adminId !== '') {
+        //     console.log('admin已经登录，发送设备加入消息：', adminId);
+        //     io.of('admin').emit('machineLaunched', launchMachinesList);
+        // }
     });
 
     // 监听客户端断开连接
     machine.on('disconnect', function() {
         console.log(`machine ${machine.id} disconnected`);
-        launchedMachines--;
-        console.log("当前启动的机 器个数：", launchedMachines);
-        // io.emit(`machine ${socket.id} disconnected`);
+        launchMachinesList = launchMachinesList.filter(launchMachine => launchMachine.machineID !== machine.id);
+        // if (adminId !== '') {
+        //     console.log(`admin已经登录，发送设备离开消息给控制台${adminId}`);
+        //     io.of('admin').emit('machineShutdown', launchMachinesList);
+        // }
     });
 });
 
 // 管理员登录，查看机器和游戏进行情况
 io.of('/admin').on('connection', function(admin) {
-    console.log('admin login');
+    console.log('admin login:', admin.id);
+    adminId = admin.id;
     // 发送管理员登录事件
-    admin.emit('connected', `${launchedMachines}`);
+    admin.emit('connected', launchMachinesList);
     // 监听机器启动事件
     admin.on('machineLaunched', function(data) {
-
+        console.log('获得的机器启动数据：', data);
     });
     // 监听机器关闭事件
     admin.on('machineShutdown', function(data) {
-
+        console.log('获得的机器离开数据：', data);
     });
-});
 
-/**
- * 游戏启动，客户端传递机器和游戏数据
- * @param {String} mac    - MAC地址
- * @param {String} gameId - 游戏ID
- */
-const RecordGame = co.wrap(function*(mac, gameId) {
-    const device = yield Device.findOne({ "mac": mac });
-    const game = yield Game.findOne({ "id": gameId });
-    console.log("设备信息：", device);
-    console.log("游戏信息", game);
-
-    if (device === null) {
-        console.log('设备未注册');
-        return;
-    }
-    if (game === null) {
-        console.log("游戏未注册");
-        return;
-    }
-
-    const newRecord = new Record({ gameId, deviceId: device.deviceId });
-    const saveResult = yield newRecord.save();
-    device.loginRecord.push(newRecord._id);
-    const saveLoginRecordResult = yield device.save();
-    console.log("保存此次游戏记录：", saveLoginRecordResult);
-    return saveResult;
+    admin.on('disconnect', function() {
+        adminId = '';
+        console.log('admin 离开');
+    });
 });
 
 module.exports = require('./config/express')(app, config);

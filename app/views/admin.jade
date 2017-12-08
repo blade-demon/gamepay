@@ -1,7 +1,18 @@
 extends layout
 block js
   script(src="https://cdn.bootcss.com/socket.io/2.0.4/socket.io.js")
+  script(src="https://code.jquery.com/jquery-3.2.1.slim.min.js")
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js")
+  script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js")
   script(src="js/admin.js")
 block content
-  h1 Gamepoch门店机器管理系统
-  p#machineNumber
+  .container
+    h3.text-center Gamepoch门店机器管理系统
+    table.table.table-hover(style='margin: 20px 0')
+      thead
+        tr
+          th(scope='col') #
+          th(scope='col') 机器mac地址
+          th(scope='col') 游戏名称
+          th(scope='col') 游戏时间
+      tbody
