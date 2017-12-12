@@ -8,7 +8,7 @@ const config = {
     app: {
       name: 'gamepay'
     },
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8080,
     db: 'mongodb://localhost/gamepay-development'
   },
 
@@ -17,7 +17,7 @@ const config = {
     app: {
       name: 'gamepay'
     },
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8080,
     db: 'mongodb://localhost/gamepay-test'
   },
 
@@ -26,7 +26,7 @@ const config = {
     app: {
       name: 'gamepay'
     },
-    port: process.env.PORT || 3000,
+    port: process.env.PORT || 8080,
     db: 'mongodb://localhost/gamepay-production'
   }
 };

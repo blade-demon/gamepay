@@ -10,8 +10,15 @@ module.exports = (app) => {
 
 // GET method: Get all devices
 router.get('/', (req, res) => {
+    var query = {};
+    if(req.query.mac) {
+        query.mac = req.query.mac;    
+    }
+    if(req.query.deviceId) {
+        query.deviceId = req.query.deviceId;
+    }
     co(function*() {
-        const devices = yield Device.find({});
+        const devices = yield Device.find(query);
         res.send({ devices });
     });
 });

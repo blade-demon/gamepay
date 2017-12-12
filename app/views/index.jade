@@ -9,7 +9,8 @@ block js
 block content
   .container
     .row
-      .col-md-4
+      .col-md
+      .col-md
         .card.text-white.bg-dark.mb-3(style='max-width: 20rem;')
           .card-header 游戏ID:
             span.gameId 1
@@ -31,6 +32,8 @@ block content
             h4.card-title 四元素大冒险
             a.btn.btn-danger.failed-btn(data-toggle='modal', data-target='#unlockGameModal', data-gameId='3') 游戏失败
             a.btn.btn-light.launch-btn(href="#") 启动游戏
+        img(src='/img/qrcode.png')
+      .col-md  
   .container
     .jumbotron.jumbotron-fluid
       .container

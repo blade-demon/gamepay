@@ -10,8 +10,13 @@ module.exports = (app) => {
 
 // GET method: Get all games
 router.get('/', (req, res) => {
+    var query = {};
+    if(req.query.id) {
+        query.id = req.query.id;
+    }
     co(function*() {
-        const games = yield Game.find({});
+        const games = yield Game.find(query);
+        console.log("games:", games);
         res.send({ games });
     });
 });

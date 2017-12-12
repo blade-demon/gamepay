@@ -43,7 +43,7 @@ function CheckCodeHandler() {
 // 机器启动/关闭游戏
 function LaunchGameHandler(event) {
     if ($(".launch-btn").hasClass('btn-warning')) {
-        SocketEndServer();
+        // SocketEndServer();
         window.location.href = "/";
     }
     // 向服务器发送：机器消息，游戏信息，时间戳
@@ -55,8 +55,9 @@ function LaunchGameHandler(event) {
     };
     // 和服务器进行Socket连接
     SocketToServer(launchData);
-    // console.log(launchData);
+    console.log(launchData);
     axios.post('/services/login', launchData).then(function(response) {
+        console.log(response.data);
         if (response.data) {
             currentGameRecord = response.data;
             $("#current-game").text(launchData.gameName);
@@ -128,7 +129,8 @@ function randomMac(prefix) {
  * @param {Object} launchData - 将游戏和机器信息发送至服务器
  */
 function SocketToServer(launchData) {
-    machine = io.connect('http://localhost:3000/machine');
+    var socketIOURL = window.location.protocol + '//' + window.location.hostname + '/machine';
+    machine = io.connect(socketIOURL);
     machine.on('connected', function(machineId) {
         console.log('当前的machineId是：', machineId);
         machine.emit('launch', machineId, launchData);

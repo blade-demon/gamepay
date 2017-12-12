@@ -10,8 +10,12 @@ module.exports = (app) => {
 
 // GET method: Get all records
 router.get('/', (req, res) => {
+    var query = {};
+    if (req.query._id) {
+        query._id = req.query._id;
+    }
     co(function*() {
-        const records = yield Record.find({});
+        const records = yield Record.find(query);
         res.send({ records });
     });
 });

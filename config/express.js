@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const compress = require('compression');
 const methodOverride = require('method-override');
+const cors = require("cors");
 
 module.exports = (app, config) => {
     const env = process.env.NODE_ENV || 'development';
@@ -17,6 +18,7 @@ module.exports = (app, config) => {
     app.set('view engine', 'jade');
 
     // app.use(favicon(config.root + '/public/img/favicon.ico'));
+    app.use(cors());
     app.use(logger('dev'));
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({

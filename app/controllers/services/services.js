@@ -21,6 +21,7 @@ router.post('/login', (req, res) => {
         console.log("保存结果：", saveResult);
         res.status(200).send(saveResult);
     }).catch(function(err) {
+        console.log(err);
         if (err) {
             res.send(false).status(500);
         }
@@ -37,7 +38,9 @@ router.post('/failed', (req, res) => {
         const failedTime = new Date();
         // 设置游戏失败标志位
         recordFound.isFailed = true;
-        recordFound.failedList.push({ "time": failedTime });
+        var failedList = recordFound.failedList;
+        failedList.push({ "time": failedTime });
+        recordFound.failedList = failedList;
         const recordFoundSave = yield recordFound.save();
         console.log('游戏失败的保存记录：', recordFoundSave);
         res.status(200).send(true);
@@ -66,7 +69,8 @@ router.post('/pay', (req, res) => {
         // 游戏失败且未付费的情况下，调用付费接口
         if (recordFound.isFailed && !recordFound.isPaid) {
             // TODO: 调用付费接口
-        } else {
+        }
+        else {
             return res.status(200).send('无需付费');
         }
 
@@ -83,7 +87,7 @@ router.post('/writecode', (req, res) => {
         const lastFailedItem = record.failedList.slice(-1).pop();
         // 不存在游戏失败记录
         if (typeof(lastFailedItem) === undefined) {
-            return res.status(400).send(false);
+            return res.status(200).send({ status: false, code: '' });
         }
         // code已存在也覆盖
         record.failedList.slice(-1).pop().code = code;
@@ -91,7 +95,7 @@ router.post('/writecode', (req, res) => {
         record.isPaid = true;
         console.log('code 已成功生成：', record.failedList);
         yield record.save();
-        res.status(200).send(true);
+        res.status(200).send({ status: true, code: code });
     });
 });
 
@@ -118,7 +122,8 @@ router.post('/check', (req, res) => {
             record.isPaid = false;
             yield record.save();
             return res.status(200).send(true);
-        } else {
+        }
+        else {
             return res.status(200).send(false);
         }
     });
@@ -169,7 +174,10 @@ const RecordGame = co.wrap(function*(mac, gameId) {
 
     const newRecord = new Record({ gameId, deviceId: device.deviceId });
     const saveResult = yield newRecord.save();
-    device.loginRecord.push(newRecord._id);
+    console.log('保存结果：', saveResult);
+    var loginRecord = device.loginRecord;
+    loginRecord.push(newRecord._id);
+    device.loginRecord = loginRecord;
     const saveLoginRecordResult = yield device.save();
     console.log("保存此次游戏记录：", saveLoginRecordResult);
     return saveResult;

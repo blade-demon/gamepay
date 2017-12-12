@@ -1,4 +1,5 @@
-var admin = io.connect('http://localhost:3000/admin');
+var socketIOURL = window.location.protocol + '//' + window.location.hostname + '/admin';
+var admin = io.connect(socketIOURL);
 
 $(function() {
     var htmlStr = ``;
