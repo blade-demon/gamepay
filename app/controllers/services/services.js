@@ -105,6 +105,7 @@ router.post('/check', (req, res) => {
     co(function*() {
         const recordId = req.body.recordId;
         const code = req.body.code;
+        console.log(recordId);
         const record = yield Record.findById(recordId);
         const lastFailedItem = record.failedList.slice(-1).pop();
         // 不存在游戏失败记录
